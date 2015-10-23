@@ -1,26 +1,29 @@
 # -*- coding: utf-8 -*-
-
 from GUI_VentiAutonomo import Ui_MainWindow
-from GraphWidget import Ui_Form
-from PyQt4 import QtCore, QtGui
+from GraphWidgetImpro import Ui_Form
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+from ImproGraph import DataList
+import PyQt4.Qwt5 as Qwt
 import sys
 import serial
 import glob
 import time
+import sqlite3
 
 
-class Ventana(QtGui.QMainWindow):
+class Ventana(QMainWindow):
 
     def __init__(self):
-        QtGui.QMainWindow.__init__(self)
+        QMainWindow.__init__(self)
         self.ventanita = Ui_MainWindow()
         self.ventanita.setupUi(self)
-        self.connect(self.ventanita.radioManual, QtCore.SIGNAL('clicked()'), self.enableButtons)
-        self.connect(self.ventanita.radioAuto, QtCore.SIGNAL('clicked()'), self.disableButtons)
-        self.timer = QtCore.QTimer()
-        self.connect(self.ventanita.BtnSpd1, QtCore.SIGNAL('clicked()'), self.speedOne)
-        self.connect(self.ventanita.BtnSpd2, QtCore.SIGNAL('clicked()'), self.speedTwo)
-        self.connect(self.ventanita.BtnSpd3, QtCore.SIGNAL('clicked()'), self.speedThree)
+        self.connect(self.ventanita.radioManual, SIGNAL('clicked()'), self.enableButtons)
+        self.connect(self.ventanita.radioAuto, SIGNAL('clicked()'), self.disableButtons)
+        self.timer = QTimer()
+        self.connect(self.ventanita.BtnSpd1, SIGNAL('clicked()'), self.speedOne)
+        self.connect(self.ventanita.BtnSpd2, SIGNAL('clicked()'), self.speedTwo)
+        self.connect(self.ventanita.BtnSpd3, SIGNAL('clicked()'), self.speedThree)
 
     def enableButtons(self):
         self.ventanita.BtnSpd1.setEnabled(True)
@@ -45,17 +48,45 @@ class Ventana(QtGui.QMainWindow):
         print("Velocidad 3")
 
 
-class Dialogo(QtGui.QDialog):
+class Dialogo(QDialog):
 
-    def __init__(self):
-        QtGui.QDialog.__init__(self)
+    def __init__(self, a, b):
+        QDialog.__init__(self)
         self.dia = Ui_Form()
         self.dia.setupUi(self)
+        self.listaTemp = a
+        self.listaTime = b
+        self.dibujar()
+
+    def dibujar(self):
+        plotYeah = self.graphicar(self.listaTime, self.listaTemp)
+        self.dia.verticalLayout.addWidget(plotYeah)
+
+    def graphicar(self, listaTime, listaTemp):
+        plot = Qwt.QwtPlot()
+        plot.setCanvasBackground(QColor("black"))
+        plot.setAxisTitle(Qwt.QwtPlot.xBottom, 'tiempo')
+        plot.setAxisTitle(Qwt.QwtPlot.yLeft, 'temperatura')
+        plot.setAxisScale(Qwt.QwtPlot.xBottom, 0,200)
+        plot.setAxisScale(Qwt.QwtPlot.yLeft, 0,45, 5)
+        plot.setAxisAutoScale(Qwt.QwtPlot.xBottom)
+#        plot.setAxisAutoScale(Qwt.QwtPlot.yLeft)
+        curve = Qwt.QwtPlotCurve('')
+        curve.setRenderHint(Qwt.QwtPlotItem.RenderAntialiased)
+        pen = QPen(QColor("white"))
+        pen.setWidth(2)
+        curve.setPen(pen)
+        curve.attach(plot)
+        x = listaTemp
+        y = listaTime
+        curve.setData(y, x)
+        return plot
+
 
 class Arduino(object):
 
     def __init__(self):
-        self.searchPort = glob.glob('/dev/tty.usbmodem*')
+        self.searchPort = glob.glob('/dev/ttyACM*')
         self.ArduinoPort = str(self.searchPort)
         self.ArduinoPort = self.ArduinoPort[1:-1]
         self.arduSerial = serial.Serial(self.ArduinoPort, 9600, timeout=1)
@@ -70,6 +101,10 @@ class Arduino(object):
     def Write(self, string):
         self.arduSerial.write(string)
 
+    def Read(self, string):
+        dato = self.arduSerial.read()
+        return dato
+
     def desconectArduino(self):
         self.arduSerial.setDTR(False)
         time.sleep(0.3)
@@ -78,13 +113,40 @@ class Arduino(object):
         time.sleep(0.3)
         self.arduSerial.close()
 
+
+class SQL(object):
+    def __init__(self):
+        self.database = sqlite3.connect('temperatura')
+        self.cursor = self.database.cursor()
+
+    def dataWrite(self, string):
+        try:
+            self.cursor.execute("INSERT INTO tiempotemperatura (TEMPERATURA, HORA)\
+                VALUES (%d, %s)" %(temperatura, hora))
+            self.database.commit()
+            print("Valor Agregado Correctamente")
+        except:
+            self.database.rollback()
+            print("Error al agregar valores")
+
+    def dataRead(self):
+        try:
+            self.cursor.execute("SELECT * FROM tiempotemperatura")
+            data = self.cursor.fetchall()
+            return data
+        except:
+            print("error en la lectura")
+
+
 def main():
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     win = Ventana()
-    graph = Dialogo()
-#    arduino = Arduino()
-    graph.connect(win.ventanita.radioAuto, QtCore.SIGNAL('clicked()'), graph.show)
-    graph.connect(win.ventanita.radioManual, QtCore.SIGNAL('clicked()'), graph.close)
+    datos = DataList()
+    a = datos.dataList()
+    b = datos.Tiempo()
+    graph = Dialogo(a, b)
+    graph.connect(win.ventanita.radioAuto, SIGNAL('clicked()'), graph.show)
+    graph.connect(win.ventanita.radioManual, SIGNAL('clicked()'), graph.close)
     win.show()
     sys.exit(app.exec_())
 
