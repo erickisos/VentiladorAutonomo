@@ -119,7 +119,7 @@ class SQL(object):
         self.database = sqlite3.connect('temperatura')
         self.cursor = self.database.cursor()
 
-    def dataWrite(self, string):
+    def dataWrite(self, temperatura, hora):
         try:
             self.cursor.execute("INSERT INTO tiempotemperatura (TEMPERATURA, HORA)\
                 VALUES (%d, %s)" %(temperatura, hora))
