@@ -137,6 +137,8 @@ class SQL(object):
         except:
             print("error en la lectura")
 
+    def dataSave(self):
+        pass
 
 def main():
     app = QApplication(sys.argv)
