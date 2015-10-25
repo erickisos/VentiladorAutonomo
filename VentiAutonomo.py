@@ -6,10 +6,6 @@ from PyQt4.QtGui import *
 from ImproGraph import DataList
 import PyQt4.Qwt5 as Qwt
 import sys
-import serial
-import glob
-import time
-import sqlite3
 
 
 class Ventana(QMainWindow):
@@ -24,6 +20,7 @@ class Ventana(QMainWindow):
         self.connect(self.ventanita.BtnSpd1, SIGNAL('clicked()'), self.speedOne)
         self.connect(self.ventanita.BtnSpd2, SIGNAL('clicked()'), self.speedTwo)
         self.connect(self.ventanita.BtnSpd3, SIGNAL('clicked()'), self.speedThree)
+        self.ventanita.radioManual.setChecked(True)
 
     def enableButtons(self):
         self.ventanita.BtnSpd1.setEnabled(True)
@@ -57,6 +54,8 @@ class Dialogo(QDialog):
         self.listaTemp = a
         self.listaTime = b
         self.dibujar()
+        self.timer = QTimer()
+        self.timer.start(1000)
 
     def dibujar(self):
         plotYeah = self.graphicar(self.listaTime, self.listaTemp)
@@ -81,64 +80,6 @@ class Dialogo(QDialog):
         y = listaTime
         curve.setData(y, x)
         return plot
-
-
-class Arduino(object):
-
-    def __init__(self):
-        self.searchPort = glob.glob('/dev/ttyACM*')
-        self.ArduinoPort = str(self.searchPort)
-        self.ArduinoPort = self.ArduinoPort[1:-1]
-        self.arduSerial = serial.Serial(self.ArduinoPort, 9600, timeout=1)
-        self.arduSerial.open()
-        self.arduSerial.setDTR(False)
-        time.sleep(0.3)
-        self.arduSerial.flushInput()
-        self.arduSerial.setDTR()
-        time.sleep(0.3)
-        self.arduSerial.write('B')
-
-    def Write(self, string):
-        self.arduSerial.write(string)
-
-    def Read(self, string):
-        dato = self.arduSerial.read()
-        return dato
-
-    def desconectArduino(self):
-        self.arduSerial.setDTR(False)
-        time.sleep(0.3)
-        self.arduSerial.flushInput()
-        self.arduSerial.setDTR()
-        time.sleep(0.3)
-        self.arduSerial.close()
-
-
-class SQL(object):
-    def __init__(self):
-        self.database = sqlite3.connect('temperatura')
-        self.cursor = self.database.cursor()
-
-    def dataWrite(self, temperatura, hora):
-        try:
-            self.cursor.execute("INSERT INTO tiempotemperatura (TEMPERATURA, HORA)\
-                VALUES (%d, %s)" %(temperatura, hora))
-            self.database.commit()
-            print("Valor Agregado Correctamente")
-        except:
-            self.database.rollback()
-            print("Error al agregar valores")
-
-    def dataRead(self):
-        try:
-            self.cursor.execute("SELECT * FROM tiempotemperatura")
-            data = self.cursor.fetchall()
-            return data
-        except:
-            print("error en la lectura")
-
-    def dataSave(self):
-        pass
 
 def main():
     app = QApplication(sys.argv)
