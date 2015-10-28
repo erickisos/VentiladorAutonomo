@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from GUI_VentiAutonomo import Ui_MainWindow
-from GraphWidgetImpro import Ui_Form
+from Arduino import ArduinoSerial
+from SQL import SQL
+from GraphWidget import Ui_Form
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from ImproGraph import DataList
-import PyQt4.Qwt5 as Qwt
 import sys
 
 
@@ -33,61 +33,45 @@ class Ventana(QMainWindow):
         self.ventanita.BtnSpd3.setEnabled(False)
 
     def speedOne(self):
+        try:
         #        arduino.Write('1')
-        print("Velocidad 1")
+            print("Velocidad 1")
+        except:
+            print("Arduino no está conectado")
 
     def speedTwo(self):
-        #        arduino.Write('2')
-        print("Velocidad 2")
+        try:
+        #        arduino.Write('1')
+            print("Velocidad 2")
+        except:
+            print("Arduino no está conectado")
 
     def speedThree(self):
-        #        arduino.Write('3')
-        print("Velocidad 3")
+        try:
+        #        arduino.Write('1')
+            print("Velocidad 3")
+        except:
+            print("Arduino no está conectado")
 
 
 class Dialogo(QDialog):
 
-    def __init__(self, a, b):
+    def __init__(self):
         QDialog.__init__(self)
         self.dia = Ui_Form()
         self.dia.setupUi(self)
-        self.listaTemp = a
-        self.listaTime = b
-        self.dibujar()
+        self.connect(self.dia.qwtPlot, SIGNAL('timeout()'), self.dibujar)
         self.timer = QTimer()
         self.timer.start(1000)
 
     def dibujar(self):
-        plotYeah = self.graphicar(self.listaTime, self.listaTemp)
-        self.dia.verticalLayout.addWidget(plotYeah)
+        pass
 
-    def graphicar(self, listaTime, listaTemp):
-        plot = Qwt.QwtPlot()
-        plot.setCanvasBackground(QColor("black"))
-        plot.setAxisTitle(Qwt.QwtPlot.xBottom, 'tiempo')
-        plot.setAxisTitle(Qwt.QwtPlot.yLeft, 'temperatura')
-        plot.setAxisScale(Qwt.QwtPlot.xBottom, 0,200)
-        plot.setAxisScale(Qwt.QwtPlot.yLeft, 0,45, 5)
-        plot.setAxisAutoScale(Qwt.QwtPlot.xBottom)
-#        plot.setAxisAutoScale(Qwt.QwtPlot.yLeft)
-        curve = Qwt.QwtPlotCurve('')
-        curve.setRenderHint(Qwt.QwtPlotItem.RenderAntialiased)
-        pen = QPen(QColor("white"))
-        pen.setWidth(2)
-        curve.setPen(pen)
-        curve.attach(plot)
-        x = listaTemp
-        y = listaTime
-        curve.setData(y, x)
-        return plot
 
 def main():
     app = QApplication(sys.argv)
     win = Ventana()
-    datos = DataList()
-    a = datos.dataList()
-    b = datos.Tiempo()
-    graph = Dialogo(a, b)
+    graph = Dialogo()
     graph.connect(win.ventanita.radioAuto, SIGNAL('clicked()'), graph.show)
     graph.connect(win.ventanita.radioManual, SIGNAL('clicked()'), graph.close)
     win.show()
