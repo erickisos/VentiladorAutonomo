@@ -1,2 +1,3 @@
 __author__ = 'erick'
-from VentiAutonomo import Ventana
+from VentiAutonomo import *
+

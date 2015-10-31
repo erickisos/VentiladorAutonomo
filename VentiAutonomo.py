@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 from GUI_VentiAutonomo import Ui_MainWindow
-from Arduino import ArduinoSerial
-from SQL import SQL
 from GraphWidget import Ui_Form
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 import sys
+from Arduino import ArduinoSerial
+from SQL import SQL
+
 
 
 class Ventana(QMainWindow):
