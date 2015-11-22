@@ -22,6 +22,8 @@ class Ventana(QMainWindow):
         self.connect(self.ventanita.BtnSpd2, SIGNAL('clicked()'), self.speedTwo)
         self.connect(self.ventanita.BtnSpd3, SIGNAL('clicked()'), self.speedThree)
         self.ventanita.radioManual.setChecked(True)
+        self.arduino = ArduinoSerial()
+        self.database = SQL()
 
     def enableButtons(self):
         self.ventanita.BtnSpd1.setEnabled(True)
@@ -35,21 +37,21 @@ class Ventana(QMainWindow):
 
     def speedOne(self):
         try:
-        #        arduino.Write('1')
+            self.arduino.Write('1')
             print("Velocidad 1")
         except:
             print("Arduino no está conectado")
 
     def speedTwo(self):
         try:
-        #        arduino.Write('1')
+            self.arduino.Write('2')
             print("Velocidad 2")
         except:
             print("Arduino no está conectado")
 
     def speedThree(self):
         try:
-        #        arduino.Write('1')
+            self.arduino.Write('3')
             print("Velocidad 3")
         except:
             print("Arduino no está conectado")

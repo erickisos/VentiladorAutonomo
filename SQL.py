@@ -1,5 +1,8 @@
+#!/usr/bin/python
 __author__ = 'erick'
+
 import sqlite3
+
 
 class SQL(object):
     def __init__(self):
